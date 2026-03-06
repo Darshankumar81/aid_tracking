@@ -1,0 +1,20 @@
+backend/
+│
+├── main.py               # FastAPI app entry
+├── database.py           # DB connection
+├── models.py             # SQLAlchemy ORM models
+├── schemas.py            # Pydantic schemas
+├── routers/
+│   ├── auth.py           # Login/signup (JWT)
+│   ├── donors.py
+│   ├── recipients.py
+│   ├── admins.py
+│   ├── transactions.py
+│   ├── suggestions.py
+│   └── tracking.py
+├── services/
+│   ├── geolocation.py    # GPS utilities
+│   ├── websocket_manager.py
+│   └── analytics.py
+└── utils/
+    └── jwt_handler.py
