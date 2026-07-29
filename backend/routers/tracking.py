@@ -2,9 +2,7 @@
 from fastapi import APIRouter, Depends, WebSocket, WebSocketDisconnect
 from sqlalchemy.orm import Session
 from backend.database import get_db
-from ..database import get_db
-from .. import models, schemas
-from ..deps import get_current_user
+
 
 from backend import models, schemas
 
