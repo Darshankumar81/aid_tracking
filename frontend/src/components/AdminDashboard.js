@@ -81,6 +81,7 @@ export default function AdminDashboard() {
       status: 'pending',
       donor_id: currentUser.id || 1,
       recipient_id: 1,
+      // Location Metadata
       location: locationName,
       latitude: parseFloat(lat),
       longitude: parseFloat(lng)
@@ -106,19 +107,10 @@ export default function AdminDashboard() {
 
   const handleVerify = async (txId) => {
     try {
-      setError('');
       await verifyTransaction(txId);
       fetchShipments();
     } catch (err) {
-      console.error('Verify error:', err.response);
-      if (err.response?.status === 403) {
-        const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-        setError(
-          `403 Forbidden: Account '${currentUser.email || 'User'}' lacks Admin permissions. Update role='admin' in PostgreSQL to verify.`
-        );
-      } else {
-        setError(`Failed to verify transaction #${txId}.`);
-      }
+      setError('Failed to verify transaction.');
     }
   };
 
@@ -133,30 +125,12 @@ export default function AdminDashboard() {
     return <span style={styles[s] || styles.pending}>{s.replace('_', ' ').toUpperCase()}</span>;
   };
 
-  // Calculate volume breakdown for summary graph
-  const getCategoryTotals = () => {
-    const totals = { 'Medical Supplies': 0, 'Food & Water': 0, 'Shelter & Clothing': 0 };
-    transactions.forEach(tx => {
-      const category = tx.aid_type || tx.type || 'Food & Water';
-      const val = parseFloat(tx.amount) || 0;
-      if (totals[category] !== undefined) {
-        totals[category] += val;
-      } else {
-        totals[category] = val;
-      }
-    });
-    return totals;
-  };
-
-  const categoryTotals = getCategoryTotals();
-  const maxTotal = Math.max(...Object.values(categoryTotals), 1);
-
   return (
     <div style={{ padding: '24px', maxWidth: '1200px', margin: '0 auto', fontFamily: 'sans-serif' }}>
       <h1>Aid Tracking Admin Dashboard</h1>
 
       {error && (
-        <div style={{ color: '#991b1b', backgroundColor: '#fee2e2', padding: '12px', borderRadius: '6px', marginBottom: '16px', border: '1px solid #fca5a5' }}>
+        <div style={{ color: '#991b1b', backgroundColor: '#fee2e2', padding: '12px', borderRadius: '6px', marginBottom: '16px' }}>
           {error}
         </div>
       )}
@@ -209,27 +183,6 @@ export default function AdminDashboard() {
         </form>
       </div>
 
-      {/* Analytics Summary */}
-      <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
-        <h3 style={{ marginTop: 0 }}>Aid Volumes by Category</h3>
-        <div style={{ display: 'flex', flexDirection: 'column', gap: '12px', marginTop: '12px' }}>
-          {Object.entries(categoryTotals).map(([cat, total]) => {
-            const percentage = Math.round((total / maxTotal) * 100);
-            return (
-              <div key={cat}>
-                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '14px', marginBottom: '4px' }}>
-                  <span><strong>{cat}</strong></span>
-                  <span>{total} units</span>
-                </div>
-                <div style={{ width: '100%', backgroundColor: '#e9ecef', borderRadius: '4px', height: '12px', overflow: 'hidden' }}>
-                  <div style={{ width: `${percentage}%`, backgroundColor: '#007bff', height: '100%', transition: 'width 0.3s ease' }} />
-                </div>
-              </div>
-            );
-          })}
-        </div>
-      </div>
-
       {/* Live Map Section */}
       <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
         <h3 style={{ marginTop: 0 }}>Live Active Delivery Routes</h3>
@@ -238,6 +191,7 @@ export default function AdminDashboard() {
             <TileLayer url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png" attribution="&copy; OpenStreetMap contributors" />
             
             {transactions.map((tx, idx) => {
+              // Priority: custom database coordinates -> location preset -> default fallback offset
               const itemLat = tx.latitude || (tx.location && LOCATION_PRESETS[tx.location] ? LOCATION_PRESETS[tx.location][0] : 40.7128 + (idx * 1.2));
               const itemLng = tx.longitude || (tx.location && LOCATION_PRESETS[tx.location] ? LOCATION_PRESETS[tx.location][1] : -74.0060 + (idx * 1.2));
 
@@ -258,7 +212,7 @@ export default function AdminDashboard() {
 
       {/* Transactions Data Table */}
       <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <h3 style={{ marginTop: 0 }}>All System Shipments & Transactions</h3>
+        <h3 style={{ marginTop: 0 }}>All Shipments & Transactions</h3>
         {loading ? (
           <p>Loading transactions...</p>
         ) : transactions.length === 0 ? (

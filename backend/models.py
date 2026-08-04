@@ -1,8 +1,7 @@
-# backend/models.py
 from sqlalchemy import Column, Integer, String, Float, Boolean, ForeignKey, DateTime, Enum, Text
 from sqlalchemy.orm import relationship
 from datetime import datetime
-from backend.database import Base
+from database import Base
 import enum
 
 class UserRole(str, enum.Enum):
@@ -22,6 +21,10 @@ class User(Base):
     longitude = Column(Float, nullable=True)
     verified = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
+
+    # --- Added for OTP Verification ---
+    otp_code = Column(String, nullable=True)
+    otp_expires_at = Column(DateTime, nullable=True)
 
     transactions_given = relationship("Transaction", back_populates="donor", foreign_keys="Transaction.donor_id")
     transactions_received = relationship("Transaction", back_populates="recipient", foreign_keys="Transaction.recipient_id")

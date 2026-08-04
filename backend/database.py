@@ -1,14 +1,14 @@
-# backend/database.py
 from sqlalchemy import create_engine
 from sqlalchemy.ext.declarative import declarative_base
 from sqlalchemy.orm import sessionmaker
-from backend.settings import settings
 
+# Format: postgresql+psycopg://username:password@localhost:5432/database_name
+SQLALCHEMY_DATABASE_URL = "postgresql+psycopg://postgres:your_password@localhost:5432/aid_tracking_db"
 
-DATABASE_URL = f"postgresql://{settings.DB_USER}:{settings.DB_PASSWORD}@{settings.DB_HOST}:{settings.DB_PORT}/{settings.DB_NAME}"
+# PostgreSQL doesn't need connect_args={"check_same_thread": False}
+engine = create_engine(SQLALCHEMY_DATABASE_URL)
+SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-engine = create_engine(DATABASE_URL, future=True)
-SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine, future=True)
 Base = declarative_base()
 
 def get_db():
