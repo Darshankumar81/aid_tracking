@@ -1,4 +1,4 @@
-# backend/routers/transactions.py
+import asyncio
 from datetime import datetime, timezone
 from typing import List, Optional
 from fastapi import APIRouter, Depends, HTTPException, status
@@ -9,6 +9,7 @@ from database import get_db
 import models
 import schemas
 from routers.auth import get_current_user
+from routers.ws import manager
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 
@@ -29,7 +30,7 @@ def require_admin(current_user: models.User = Depends(get_current_user)):
 
 @router.post("", response_model=schemas.TransactionResponse, status_code=status.HTTP_201_CREATED)
 @router.post("/", response_model=schemas.TransactionResponse, status_code=status.HTTP_201_CREATED)
-def create_transaction(
+async def create_transaction(
     payload: schemas.TransactionCreate, 
     db: Session = Depends(get_db), 
     current_user: models.User = Depends(get_current_user)
@@ -42,17 +43,33 @@ def create_transaction(
     if not donor:
         raise HTTPException(status_code=404, detail="Donor user not found")
         
-    transaction = models.Transaction(
-        donor_id=donor_id,
-        recipient_id=payload.recipient_id,
-        aid_type=payload.aid_type,
-        product_name=payload.product_name,
-        amount=payload.amount,
-        status=getattr(payload, "status", models.TransactionStatus.pending) or models.TransactionStatus.pending
-    )
+    # Extract all fields dynamically from schema payload
+    tx_dict = payload.model_dump(exclude_unset=True) if hasattr(payload, "model_dump") else payload.dict(exclude_unset=True)
+    tx_dict["donor_id"] = donor_id
+
+    # Normalize location & destination properties so both are saved
+    location_val = tx_dict.get("location") or tx_dict.get("destination")
+    if location_val:
+        tx_dict["location"] = location_val
+        tx_dict["destination"] = location_val
+
+    # Unpack all properties into models.Transaction
+    transaction = models.Transaction(**tx_dict)
+
     db.add(transaction)
     db.commit()
     db.refresh(transaction)
+
+    # Real-Time WebSocket Broadcast for newly pledged shipment
+    status_val = transaction.status.value if hasattr(transaction.status, "value") else str(transaction.status or "pending")
+    await manager.broadcast({
+        "event": "NEW_PLEDGE",
+        "transaction_id": transaction.id,
+        "product_name": transaction.product_name or transaction.aid_type or "Aid Package",
+        "destination": transaction.destination or transaction.location or "Regional Target",
+        "new_status": status_val.upper()
+    })
+
     return transaction
 
 
@@ -77,7 +94,7 @@ def list_transactions(
 
 
 @router.put("/{tx_id}/verify", response_model=schemas.TransactionResponse)
-def verify_transaction(
+async def verify_transaction(
     tx_id: int, 
     db: Session = Depends(get_db), 
     admin: models.User = Depends(require_admin)
@@ -92,11 +109,21 @@ def verify_transaction(
     tx.verified_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(tx)
+
+    # Real-Time WebSocket Broadcast for Admin Verification
+    await manager.broadcast({
+        "event": "STATUS_UPDATED",
+        "transaction_id": tx.id,
+        "product_name": tx.product_name or tx.aid_type or "Aid Package",
+        "destination": tx.destination or tx.location or "Regional Target",
+        "new_status": "VERIFIED"
+    })
+
     return tx
 
 
 @router.put("/{tx_id}/status", response_model=schemas.TransactionResponse)
-def update_status(
+async def update_status(
     tx_id: int, 
     payload: StatusUpdateSchema, 
     db: Session = Depends(get_db), 
@@ -115,4 +142,15 @@ def update_status(
     tx.status = payload.status
     db.commit()
     db.refresh(tx)
+
+    # Real-Time WebSocket Broadcast for Shipment Status Changes
+    status_str = tx.status.value if hasattr(tx.status, "value") else str(tx.status or "pending")
+    await manager.broadcast({
+        "event": "STATUS_UPDATED",
+        "transaction_id": tx.id,
+        "product_name": tx.product_name or tx.aid_type or "Aid Package",
+        "destination": tx.destination or tx.location or "Regional Target",
+        "new_status": status_str.upper()
+    })
+
     return tx

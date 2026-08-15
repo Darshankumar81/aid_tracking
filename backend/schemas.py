@@ -1,8 +1,8 @@
-# backend/schemas.py
-from pydantic import BaseModel, EmailStr, ConfigDict
-from typing import Optional, List
 from datetime import datetime
-from models import UserRole, TransactionStatus
+from typing import List, Optional
+
+from models import TransactionStatus, UserRole
+from pydantic import BaseModel, ConfigDict, EmailStr
 
 
 # -------------------------------------------------------------
@@ -50,11 +50,21 @@ class UserResponse(BaseModel):
 # TRANSACTION SCHEMAS
 # -------------------------------------------------------------
 class TransactionCreate(BaseModel):
-    donor_id: Optional[int] = None  # Auto-populated from JWT token if omitted by frontend
+    donor_id: Optional[int] = None  # Auto-populated from JWT token if omitted
     recipient_id: Optional[int] = None
     aid_type: str
+    type: Optional[str] = None
     product_name: Optional[str] = None
+    description: Optional[str] = None
     amount: Optional[float] = None
+    quantity: Optional[int] = None
+    status: Optional[TransactionStatus] = TransactionStatus.pending
+
+    # --- Location & Geolocation Fields ---
+    location: Optional[str] = None
+    destination: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
 
 
 class TransactionResponse(BaseModel):
@@ -62,14 +72,24 @@ class TransactionResponse(BaseModel):
     donor_id: int
     recipient_id: Optional[int] = None
     aid_type: str
+    type: Optional[str] = None
     product_name: Optional[str] = None
+    description: Optional[str] = None
     amount: Optional[float] = None
+    quantity: Optional[int] = None
     status: TransactionStatus
+
+    # --- Location & Geolocation Fields ---
+    location: Optional[str] = None
+    destination: Optional[str] = None
+    latitude: Optional[float] = None
+    longitude: Optional[float] = None
+
     verified_by: Optional[int] = None
     verified_at: Optional[datetime] = None
     created_at: datetime
 
-    # Optional nested objects for rich frontend views (maps, cards, tables)
+    # Optional nested objects for rich frontend views
     donor: Optional[UserResponse] = None
     recipient: Optional[UserResponse] = None
 
