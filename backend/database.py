@@ -1,16 +1,17 @@
 from sqlalchemy import create_engine
-from sqlalchemy.ext.declarative import declarative_base
-from sqlalchemy.orm import sessionmaker
+from sqlalchemy.orm import declarative_base, sessionmaker
 
-# Format: postgresql+psycopg://username:password@localhost:5432/database_name
+# Database connection URL
 SQLALCHEMY_DATABASE_URL = "postgresql+psycopg://postgres:your_password@localhost:5432/aid_tracking_db"
 
-# PostgreSQL doesn't need connect_args={"check_same_thread": False}
+# Create engine and session factory
 engine = create_engine(SQLALCHEMY_DATABASE_URL)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
+# Single Declarative Base instance used across all models
 Base = declarative_base()
 
+# Dependency to get DB session in FastAPI endpoints
 def get_db():
     db = SessionLocal()
     try:

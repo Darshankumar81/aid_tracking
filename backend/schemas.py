@@ -28,6 +28,7 @@ class UserCreate(BaseModel):
     password: str
     role: Optional[UserRole] = UserRole.donor
     phone: Optional[str] = None
+    phone_number: Optional[str] = None
     latitude: Optional[float] = None
     longitude: Optional[float] = None
 
@@ -37,6 +38,7 @@ class UserResponse(BaseModel):
     name: str
     email: EmailStr
     phone: Optional[str] = None
+    phone_number: Optional[str] = None
     role: UserRole
     latitude: Optional[float] = None
     longitude: Optional[float] = None

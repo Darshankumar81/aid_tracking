@@ -3,11 +3,12 @@ import random
 from typing import List
 
 from database import get_db
-from fastapi import APIRouter, Depends, HTTPException, status
+from fastapi import APIRouter, BackgroundTasks, Depends, HTTPException, status
 import models
 from pydantic import BaseModel
 from routers.auth import get_current_user
 import schemas
+from services.notifications import send_otp_email, send_otp_sms
 from sqlalchemy.orm import Session, joinedload
 
 router = APIRouter(prefix="/recipients", tags=["Recipients"])
@@ -68,10 +69,11 @@ def get_incoming_shipments(
 @router.post("/generate-otp")
 def generate_delivery_otp(
     payload: OTPRequest,
+    background_tasks: BackgroundTasks,
     db: Session = Depends(get_db),
     current_user: models.User = Depends(get_current_user),
 ):
-    """Generates a secure 6-digit OTP code for proof-of-delivery."""
+    """Generates a secure 6-digit OTP code and dispatches via Email & SMS."""
     tx = (
         db.query(models.Transaction)
         .filter(models.Transaction.id == payload.transaction_id)
@@ -82,6 +84,7 @@ def generate_delivery_otp(
 
     otp = f"{random.randint(100000, 999999)}"
 
+    # Store OTP and expiration timestamp on recipient user record
     current_user.otp_code = otp
     current_user.otp_expires_at = datetime.now(timezone.utc) + timedelta(
         minutes=15
@@ -89,10 +92,31 @@ def generate_delivery_otp(
 
     db.commit()
 
+    # Determine recipient notification details
+    recipient_email = current_user.email
+    recipient_phone = getattr(current_user, "phone_number", None) or "+919999999999"
+    product_title = tx.product_name or "Aid Package"
+
+    # Queue background notification dispatches (Email + SMS)
+    background_tasks.add_task(
+        send_otp_email,
+        to_email=recipient_email,
+        otp_code=otp,
+        shipment_id=tx.id,
+        product_name=product_title,
+    )
+
+    background_tasks.add_task(
+        send_otp_sms,
+        to_phone=recipient_phone,
+        otp_code=otp,
+        shipment_id=tx.id,
+    )
+
     return {
         "status": "success",
-        "message": f"OTP generated for shipment #{tx.id}",
-        "otp_code": otp,  # Exposed for demo and fast testing
+        "message": f"OTP dispatched to email ({recipient_email}) and phone ({recipient_phone})",
+        "otp_code": otp,  # Maintained for quick demo testing
         "expires_in_minutes": 15,
     }
 
@@ -143,3 +167,50 @@ def verify_delivery_otp(
     db.commit()
     db.refresh(tx)
     return tx
+@router.post("/generate-otp")
+def generate_delivery_otp(
+    payload: OTPRequest,
+    background_tasks: BackgroundTasks,
+    db: Session = Depends(get_db),
+    current_user: models.User = Depends(get_current_user),
+):
+    tx = db.query(models.Transaction).filter(models.Transaction.id == payload.transaction_id).first()
+    if not tx:
+        raise HTTPException(status_code=404, detail="Shipment not found")
+
+    otp = f"{random.randint(100000, 999999)}"
+
+    # Save OTP to the currently logged-in recipient user record
+    current_user.otp_code = otp
+    current_user.otp_expires_at = datetime.now(timezone.utc) + timedelta(minutes=15)
+    db.commit()
+
+    # Dynamic target details derived from the active logged-in user session
+    recipient_email = current_user.email
+    recipient_phone = current_user.phone_number
+
+    # Send email to logged-in user
+    if recipient_email:
+        background_tasks.add_task(
+            send_otp_email,
+            to_email=recipient_email,
+            otp_code=otp,
+            shipment_id=tx.id,
+            product_name=tx.product_name or "Aid Package",
+        )
+
+    # Send SMS to logged-in user's phone number
+    if recipient_phone:
+        background_tasks.add_task(
+            send_otp_sms,
+            to_phone=recipient_phone,
+            otp_code=otp,
+            shipment_id=tx.id,
+        )
+
+    return {
+        "status": "success",
+        "message": f"OTP sent to logged-in user ({recipient_email} / {recipient_phone or 'No phone configured'})",
+        "otp_code": otp,
+        "expires_in_minutes": 15,
+    }

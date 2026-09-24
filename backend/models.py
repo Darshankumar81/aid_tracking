@@ -28,6 +28,7 @@ class User(Base):
     name = Column(String, nullable=False)
     email = Column(String, unique=True, nullable=False, index=True)
     phone = Column(String, nullable=True)
+    phone_number = Column(String, nullable=True)  # Alias field for compatibility
     hashed_password = Column(String, nullable=False)
     role = Column(Enum(UserRole), default=UserRole.donor, nullable=False)
     latitude = Column(Float, nullable=True)
@@ -35,7 +36,7 @@ class User(Base):
     verified = Column(Boolean, default=False)
     created_at = Column(DateTime, default=datetime.utcnow)
 
-    # --- Added for OTP Verification ---
+    # --- OTP Verification ---
     otp_code = Column(String, nullable=True)
     otp_expires_at = Column(DateTime, nullable=True)
 
