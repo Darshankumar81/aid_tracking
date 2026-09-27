@@ -9,6 +9,7 @@ from database import get_db
 import models
 import schemas
 from routers.auth import get_current_user
+from routers.notifications import notify_recipient_and_donor
 from routers.ws import manager
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
@@ -60,6 +61,22 @@ async def create_transaction(
     db.commit()
     db.refresh(transaction)
 
+    # Trigger Notifications if recipient is assigned
+    if transaction.recipient_id:
+        recipient = db.query(models.User).filter(models.User.id == transaction.recipient_id).first()
+        if recipient:
+            notify_recipient_and_donor(
+                db_session=db,
+                recipient_user=recipient,
+                donor_user=donor,
+                shipment_details={
+                    "id": transaction.id,
+                    "product_name": transaction.product_name or transaction.aid_type,
+                    "destination": transaction.destination or transaction.location,
+                    "amount": transaction.amount or transaction.quantity,
+                }
+            )
+
     # Real-Time WebSocket Broadcast for newly pledged shipment
     status_val = transaction.status.value if hasattr(transaction.status, "value") else str(transaction.status or "pending")
     await manager.broadcast({
@@ -100,7 +117,11 @@ async def verify_transaction(
     admin: models.User = Depends(require_admin)
 ):
     """Admin-only endpoint to mark shipments as verified."""
-    tx = db.query(models.Transaction).filter(models.Transaction.id == tx_id).first()
+    tx = db.query(models.Transaction).options(
+        joinedload(models.Transaction.donor),
+        joinedload(models.Transaction.recipient)
+    ).filter(models.Transaction.id == tx_id).first()
+    
     if not tx:
         raise HTTPException(status_code=404, detail="Transaction not found")
         
@@ -109,6 +130,20 @@ async def verify_transaction(
     tx.verified_at = datetime.now(timezone.utc)
     db.commit()
     db.refresh(tx)
+
+    # Send Notification if recipient is attached
+    if tx.recipient and tx.donor:
+        notify_recipient_and_donor(
+            db_session=db,
+            recipient_user=tx.recipient,
+            donor_user=tx.donor,
+            shipment_details={
+                "id": tx.id,
+                "product_name": tx.product_name or tx.aid_type,
+                "destination": tx.destination or tx.location,
+                "amount": tx.amount or tx.quantity,
+            }
+        )
 
     # Real-Time WebSocket Broadcast for Admin Verification
     await manager.broadcast({
@@ -130,7 +165,11 @@ async def update_status(
     current_user: models.User = Depends(get_current_user)
 ):
     """Update shipment progress (e.g. pending -> in_transit -> delivered)."""
-    tx = db.query(models.Transaction).filter(models.Transaction.id == tx_id).first()
+    tx = db.query(models.Transaction).options(
+        joinedload(models.Transaction.donor),
+        joinedload(models.Transaction.recipient)
+    ).filter(models.Transaction.id == tx_id).first()
+    
     if not tx:
         raise HTTPException(status_code=404, detail="Transaction not found")
     
@@ -142,6 +181,20 @@ async def update_status(
     tx.status = payload.status
     db.commit()
     db.refresh(tx)
+
+    # Send Notification if recipient is attached
+    if tx.recipient and tx.donor:
+        notify_recipient_and_donor(
+            db_session=db,
+            recipient_user=tx.recipient,
+            donor_user=tx.donor,
+            shipment_details={
+                "id": tx.id,
+                "product_name": tx.product_name or tx.aid_type,
+                "destination": tx.destination or tx.location,
+                "amount": tx.amount or tx.quantity,
+            }
+        )
 
     # Real-Time WebSocket Broadcast for Shipment Status Changes
     status_str = tx.status.value if hasattr(tx.status, "value") else str(tx.status or "pending")

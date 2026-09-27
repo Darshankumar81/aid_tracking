@@ -1,8 +1,7 @@
-"""Database Seeder script."""
+"""Database Seeder script for AidTracker."""
 
 import logging
 import bcrypt
-
 from database import SessionLocal, engine
 import models
 
@@ -16,16 +15,13 @@ def hash_password(password: str) -> str:
 
 
 def seed_database() -> None:
-    """Seed database with initial core users only."""
+    """Seed database with core system users only."""
+    # Ensure tables exist
     models.Base.metadata.create_all(bind=engine)
     db = SessionLocal()
 
     try:
-        logging.info("🌱 Clearing all transactions and tracking data...")
-        db.query(models.Tracking).delete()
-        db.query(models.Transaction).delete()
-        db.commit()
-
+        # Determine available columns dynamically based on your models
         pwd_col = next(
             (col for col in ["password", "password_hash"] if hasattr(models.User, col)),
             "hashed_password",
@@ -33,31 +29,14 @@ def seed_database() -> None:
         has_phone = hasattr(models.User, "phone_number")
 
         users_data = [
-            (
-                "Admin HQ",
-                "admin@example.com",
-                "admin123",
-                models.UserRole.admin,
-                "+10000000000",
-            ),
-            (
-                "Donor Org",
-                "donor@example.com",
-                "donor123",
-                models.UserRole.donor,
-                "+10000000001",
-            ),
-            (
-                "Field Coordinator",
-                "recipient@example.com",
-                "recipient123",
-                models.UserRole.recipient,
-                "+10000000002",
-            ),
+            ("Admin HQ", "admin@example.com", "admin123", getattr(models.UserRole, "admin", "admin"), "+10000000000"),
+            ("Donor Org", "donor@example.com", "donor123", getattr(models.UserRole, "donor", "donor"), "+10000000001"),
+            ("Field Coordinator", "recipient@example.com", "recipient123", getattr(models.UserRole, "recipient", "recipient"), "+10000000002"),
         ]
 
         logging.info("👤 Seeding system users...")
         for name, email, pwd, role, phone in users_data:
+            # Check if user already exists to prevent duplicates
             user = db.query(models.User).filter(models.User.email == email).first()
             if not user:
                 user_kwargs = {
@@ -73,7 +52,7 @@ def seed_database() -> None:
                 db.add(user)
 
         db.commit()
-        logging.info("✅ Database cleared of dummy shipments. Users ready.")
+        logging.info("✅ Core system users verified.")
 
     except Exception as err:
         db.rollback()

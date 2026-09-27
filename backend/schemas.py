@@ -3,6 +3,9 @@ from typing import List, Optional
 
 from models import TransactionStatus, UserRole
 from pydantic import BaseModel, ConfigDict, EmailStr
+from datetime import datetime
+from pydantic import BaseModel
+
 
 
 # -------------------------------------------------------------
@@ -136,3 +139,14 @@ class SuggestionResponse(BaseModel):
 
 # Resolve circular type reference for Token schema
 Token.model_rebuild()
+
+class NotificationResponse(BaseModel):
+    id: int
+    user_id: int
+    title: str
+    message: str
+    is_read: bool
+    created_at: datetime
+
+    class Config:
+        from_attributes = True

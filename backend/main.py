@@ -7,6 +7,7 @@ from fastapi.responses import JSONResponse
 # Import modular routers
 from routers.audit import router as audit_router
 from routers.auth import router as auth_router
+from routers.notifications import router as notifications_router
 from routers.recipients import router as recipients_router
 from routers.tracking import router as tracking_router
 from routers.transactions import router as transactions_router
@@ -67,6 +68,7 @@ app.include_router(transactions_router)
 app.include_router(recipients_router)
 app.include_router(tracking_router)
 app.include_router(audit_router)
+app.include_router(notifications_router)
 
 
 # Root endpoint for basic health checks

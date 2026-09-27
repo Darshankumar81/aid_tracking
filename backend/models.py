@@ -51,6 +51,7 @@ class User(Base):
         foreign_keys="Transaction.recipient_id",
     )
     suggestions = relationship("Suggestion", back_populates="user")
+    notifications = relationship("Notification", back_populates="user")
 
 
 class TransactionStatus(str, enum.Enum):
@@ -126,3 +127,16 @@ class Suggestion(Base):
     created_at = Column(DateTime, default=datetime.utcnow)
 
     user = relationship("User", back_populates="suggestions")
+
+
+class Notification(Base):
+    __tablename__ = "notifications"
+
+    id = Column(Integer, primary_key=True, index=True)
+    user_id = Column(Integer, ForeignKey("users.id"), nullable=False)
+    title = Column(String, nullable=False)
+    message = Column(Text, nullable=False)
+    is_read = Column(Boolean, default=False)
+    created_at = Column(DateTime, default=datetime.utcnow)
+
+    user = relationship("User", back_populates="notifications")
