@@ -36,17 +36,21 @@ export const DISTRIBUTING_HUBS = {
 
 // Haversine Algorithm to determine nearest transit hub
 export const getNearestHub = (lat, lng) => {
-  if (!lat || !lng) return DISTRIBUTING_HUBS.bangalore;
+  const parsedLat = parseFloat(lat);
+  const parsedLng = parseFloat(lng);
+
+  if (isNaN(parsedLat) || isNaN(parsedLng)) return DISTRIBUTING_HUBS.bangalore;
+
   const toRad = (v) => (v * Math.PI) / 180;
   let minDistance = Infinity;
   let nearest = DISTRIBUTING_HUBS.bangalore;
 
   Object.values(DISTRIBUTING_HUBS).forEach((hub) => {
-    const dLat = toRad(hub.coords[0] - lat);
-    const dLng = toRad(hub.coords[1] - lng);
+    const dLat = toRad(hub.coords[0] - parsedLat);
+    const dLng = toRad(hub.coords[1] - parsedLng);
     const a =
       Math.sin(dLat / 2) * Math.sin(dLat / 2) +
-      Math.cos(toRad(lat)) * Math.cos(toRad(hub.coords[0])) *
+      Math.cos(toRad(parsedLat)) * Math.cos(toRad(hub.coords[0])) *
       Math.sin(dLng / 2) * Math.sin(dLng / 2);
     const dist = 6371 * (2 * Math.atan2(Math.sqrt(a), Math.sqrt(1 - a)));
 
@@ -167,14 +171,14 @@ export default function AdminDashboard() {
       if (data && data.length > 0) {
         const foundLat = parseFloat(data[0].lat);
         const foundLng = parseFloat(data[0].lon);
-        
+
         setLat(foundLat.toFixed(4));
         setLng(foundLng.toFixed(4));
         setMapCenter([foundLat, foundLng]);
 
         const closest = getNearestHub(foundLat, foundLng);
         setSelectedHub(closest.id);
-        
+
         return { lat: foundLat, lng: foundLng, hubId: closest.id };
       }
     } catch (err) {
@@ -193,7 +197,7 @@ export default function AdminDashboard() {
     setError('');
 
     const currentUser = JSON.parse(localStorage.getItem('user') || '{}');
-    
+
     let finalLat = parseFloat(lat);
     let finalLng = parseFloat(lng);
     let activeHub = selectedHub;
@@ -206,7 +210,7 @@ export default function AdminDashboard() {
         finalLng = geoResult.lng;
         activeHub = geoResult.hubId;
       } else {
-        // Safe North India fallback for northern queries if geocoding fails
+        // Safe fallback for queries if geocoding fails
         finalLat = 26.8467; // Lucknow
         finalLng = 80.9462;
         activeHub = 'delhi';
@@ -251,6 +255,7 @@ export default function AdminDashboard() {
       setSubmitting(false);
     }
   };
+
   // Direct Inline Status Update Handler
   const handleStatusChange = async (txId, newStatus) => {
     try {
@@ -297,7 +302,9 @@ export default function AdminDashboard() {
 
   return (
     <div style={{ padding: '24px', maxWidth: '1280px', margin: '0 auto', fontFamily: 'sans-serif' }}>
-      <h1>Aid Tracking Admin & National Logistics Center</h1>
+      <h1 style={{ color: '#d9dbdd', marginBottom: '20px' }}>
+        Aid Tracking Admin & National Logistics Center
+      </h1>
 
       {error && (
         <div style={{ color: '#991b1b', backgroundColor: '#fee2e2', padding: '12px', borderRadius: '6px', marginBottom: '16px', border: '1px solid #fca5a5' }}>
@@ -306,7 +313,7 @@ export default function AdminDashboard() {
       )}
 
       {/* Regional Distributing Hubs Inventory Summary */}
-      <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
+      <div style={{ backgroundColor: '#ffffff', color: '#1e293b', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
         <h3 style={{ marginTop: 0, color: '#1e293b' }}>🏭 Regional Distributing Centers Network Status</h3>
         <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '16px' }}>
           {Object.entries(DISTRIBUTING_HUBS).map(([key, hub]) => {
@@ -335,12 +342,12 @@ export default function AdminDashboard() {
       </div>
 
       {/* Dispatch New Aid Form */}
-      <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
-        <h3 style={{ marginTop: 0 }}>Dispatch New Aid Shipment</h3>
+      <div style={{ backgroundColor: '#ffffff', color: '#1e293b', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
+        <h3 style={{ marginTop: 0, color: '#1e293b' }}>Dispatch New Aid Shipment</h3>
         <form onSubmit={handleDispatch} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', alignItems: 'end' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>Aid Category</label>
-            <select value={type} onChange={(e) => setType(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', color: '#1e293b' }}>Aid Category</label>
+            <select value={type} onChange={(e) => setType(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: '#1e293b', backgroundColor: '#fff' }}>
               <option value="Medical Supplies">Medical Supplies</option>
               <option value="Food & Water">Food & Water</option>
               <option value="Shelter & Clothing">Shelter & Clothing</option>
@@ -348,17 +355,17 @@ export default function AdminDashboard() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>Product Name</label>
-            <input type="text" placeholder="e.g. First Aid Kits" value={productName} onChange={(e) => setProductName(e.target.value)} required style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', color: '#1e293b' }}>Product Name</label>
+            <input type="text" placeholder="e.g. First Aid Kits" value={productName} onChange={(e) => setProductName(e.target.value)} required style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: '#1e293b', backgroundColor: '#fff' }} />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>Quantity / Units</label>
-            <input type="number" placeholder="e.g. 250" value={amount} onChange={(e) => setAmount(e.target.value)} required style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', color: '#1e293b' }}>Quantity / Units</label>
+            <input type="number" placeholder="e.g. 250" value={amount} onChange={(e) => setAmount(e.target.value)} required style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: '#1e293b', backgroundColor: '#fff' }} />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', color: '#1e293b' }}>
               Destination / City Name {geocoding && <span style={{ color: '#007bff' }}>(Locating...)</span>}
             </label>
             <div style={{ display: 'flex', gap: '4px' }}>
@@ -369,7 +376,7 @@ export default function AdminDashboard() {
                 onChange={(e) => setLocationName(e.target.value)} 
                 onBlur={() => geocodeLocation(locationName)}
                 required 
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} 
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: '#1e293b', backgroundColor: '#fff' }} 
               />
               <button 
                 type="button" 
@@ -382,11 +389,11 @@ export default function AdminDashboard() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>Transit Hub</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', color: '#1e293b' }}>Transit Hub</label>
             <select 
               value={selectedHub} 
               onChange={(e) => setSelectedHub(e.target.value)} 
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#f0fdf4' }}
+              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#f0fdf4', color: '#1e293b' }}
             >
               {Object.entries(DISTRIBUTING_HUBS).map(([key, hub]) => (
                 <option key={key} value={key}>{hub.name}</option>
@@ -401,11 +408,11 @@ export default function AdminDashboard() {
       </div>
 
       {/* Multi-Stage Route Map */}
-      <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
-        <h3 style={{ marginTop: 0 }}>📍 National Aid Distribution Routes (Multi-Hub Logistics)</h3>
+      <div style={{ backgroundColor: '#ffffff', color: '#1e293b', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
+        <h3 style={{ marginTop: 0, color: '#1e293b' }}>📍 National Aid Distribution Routes (Multi-Hub Logistics)</h3>
         <p style={{ fontSize: '12px', color: '#64748b', marginTop: '-8px', marginBottom: '16px' }}>
-          <span style={{ color: '#9333ea', fontWeight: 'bold' }}>══ Purple Line:</span> Leg 1 (Donor Origin $\rightarrow$ Regional Hub) | 
-          <span style={{ color: '#2563eb', fontWeight: 'bold', marginLeft: '8px' }}>══ Colored Line:</span> Leg 2 (Regional Hub $\rightarrow$ Final Destination)
+          <span style={{ color: '#9333ea', fontWeight: 'bold' }}>══ Purple Line:</span> Leg 1 (Donor Origin → Regional Hub) | 
+          <span style={{ color: '#2563eb', fontWeight: 'bold', marginLeft: '8px' }}>══ Colored Line:</span> Leg 2 (Regional Hub → Final Destination)
         </p>
         <div style={{ height: '420px', width: '100%', borderRadius: '8px', overflow: 'hidden' }}>
           <MapContainer center={mapCenter} zoom={5} style={{ height: '100%', width: '100%' }}>
@@ -418,15 +425,17 @@ export default function AdminDashboard() {
             {Object.values(DISTRIBUTING_HUBS).map((hub) => (
               <Marker key={hub.id} position={hub.coords}>
                 <Popup>
-                  <strong>🏭 {hub.name}</strong><br />
-                  Staged Stock: {(hubBreakdown[hub.id]?.pending || 0).toLocaleString()} units
+                  <div style={{ color: '#000' }}>
+                    <strong>🏭 {hub.name}</strong><br />
+                    Staged Stock: {(hubBreakdown[hub.id]?.pending || 0).toLocaleString()} units
+                  </div>
                 </Popup>
               </Marker>
             ))}
 
             {transactions.map((tx, idx) => {
-              const destLat = tx.latitude || 12.9141;
-              const destLng = tx.longitude || 74.8560;
+              const destLat = parseFloat(tx.latitude) || 12.9141;
+              const destLng = parseFloat(tx.longitude) || 74.8560;
               const destCoords = [destLat, destLng];
 
               const hub = getNearestHub(destLat, destLng);
@@ -458,11 +467,13 @@ export default function AdminDashboard() {
                   {/* Final Target Marker */}
                   <Marker position={destCoords}>
                     <Popup>
-                      <strong>{tx.product_name || tx.aid_type || tx.type}</strong><br />
-                      Destination: {parseLocation(tx)}<br />
-                      Assigned Hub: <strong>{hub.name}</strong><br />
-                      Quantity: {tx.amount} units<br />
-                      Status: <strong>{(tx.status || 'pending').toUpperCase()}</strong>
+                      <div style={{ color: '#000' }}>
+                        <strong>{tx.product_name || tx.aid_type || tx.type}</strong><br />
+                        Destination: {parseLocation(tx)}<br />
+                        Assigned Hub: <strong>{hub.name}</strong><br />
+                        Quantity: {tx.amount} units<br />
+                        Status: <strong>{(tx.status || 'pending').toUpperCase()}</strong>
+                      </div>
                     </Popup>
                   </Marker>
                 </React.Fragment>
@@ -473,16 +484,16 @@ export default function AdminDashboard() {
       </div>
 
       {/* Transactions Data Table with Dropdown Status Control */}
-      <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <h3 style={{ marginTop: 0 }}>All System Shipments & Assigned Transit Hubs</h3>
+      <div style={{ backgroundColor: '#ffffff', color: '#1e293b', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <h3 style={{ marginTop: 0, color: '#1e293b' }}>All System Shipments & Assigned Transit Hubs</h3>
         {loading ? (
-          <p>Loading transactions...</p>
+          <p style={{ color: '#64748b' }}>Loading transactions...</p>
         ) : transactions.length === 0 ? (
-          <p style={{ color: '#666' }}>No active transactions found.</p>
+          <p style={{ color: '#64748b' }}>No active transactions found.</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '12px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '12px', color: '#1e293b' }}>
             <thead>
-              <tr style={{ backgroundColor: '#f8f9fa', textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>
+              <tr style={{ backgroundColor: '#f8f9fa', textAlign: 'left', borderBottom: '2px solid #dee2e6', color: '#1e293b' }}>
                 <th style={{ padding: '10px' }}>ID</th>
                 <th style={{ padding: '10px' }}>Category</th>
                 <th style={{ padding: '10px' }}>Product</th>
@@ -496,17 +507,17 @@ export default function AdminDashboard() {
               {transactions.map((tx) => {
                 const assignedHub = getNearestHub(tx.latitude, tx.longitude);
                 return (
-                  <tr key={tx.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                    <td style={{ padding: '10px' }}>#{tx.id}</td>
-                    <td style={{ padding: '10px' }}>{tx.aid_type || tx.type}</td>
-                    <td style={{ padding: '10px' }}>{tx.product_name || tx.description || 'N/A'}</td>
-                    <td style={{ padding: '10px' }}>{parseLocation(tx)}</td>
+                  <tr key={tx.id} style={{ borderBottom: '1px solid #dee2e6', color: '#1e293b' }}>
+                    <td style={{ padding: '10px', color: '#1e293b' }}>#{tx.id}</td>
+                    <td style={{ padding: '10px', color: '#1e293b' }}>{tx.aid_type || tx.type}</td>
+                    <td style={{ padding: '10px', color: '#1e293b' }}>{tx.product_name || tx.description || 'N/A'}</td>
+                    <td style={{ padding: '10px', color: '#1e293b' }}>{parseLocation(tx)}</td>
                     <td style={{ padding: '10px' }}>
                       <span style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '4px', backgroundColor: '#ede9fe', color: '#6d28d9', fontWeight: 'bold' }}>
                         {assignedHub.name}
                       </span>
                     </td>
-                    <td style={{ padding: '10px' }}>{tx.amount}</td>
+                    <td style={{ padding: '10px', color: '#1e293b' }}>{tx.amount}</td>
                     <td style={{ padding: '10px' }}>
                       <select
                         value={tx.status ? tx.status.toLowerCase() : 'pending'}

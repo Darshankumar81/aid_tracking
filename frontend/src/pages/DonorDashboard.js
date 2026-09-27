@@ -232,7 +232,6 @@ export default function DonorDashboard() {
     let finalLng = parseFloat(lng);
     let activeHub = selectedHub;
 
-    // Force geocoding resolution if coordinates are missing or invalid
     if (isNaN(finalLat) || isNaN(finalLng) || !finalLat || !finalLng) {
       const geoResult = await geocodeLocation(locationName);
       if (geoResult) {
@@ -240,7 +239,6 @@ export default function DonorDashboard() {
         finalLng = geoResult.lng;
         activeHub = geoResult.hubId;
       } else {
-        // Fallback geocoordinates based on text destination match
         if (locationName.toLowerCase().includes('lucknow') || locationName.toLowerCase().includes('delhi')) {
           finalLat = 26.8467;
           finalLng = 80.9462;
@@ -313,8 +311,8 @@ export default function DonorDashboard() {
 
   return (
     <div style={{ padding: '24px', maxWidth: '1280px', margin: '0 auto', fontFamily: 'sans-serif' }}>
-      <h2>Donor Portal & Multi-Hub Contribution Dashboard</h2>
-      <p style={{ color: '#555', marginBottom: '20px' }}>
+      <h2 style={{ color: '#ffffff' }}>Donor Portal & Multi-Hub Contribution Dashboard</h2>
+      <p style={{ color: '#cbd5e1', marginBottom: '20px' }}>
         Welcome back, <strong>{currentUser.name || currentUser.email || 'Donor'}</strong>. Shipments route through our national logistics network.
       </p>
 
@@ -326,23 +324,23 @@ export default function DonorDashboard() {
 
       {/* Network Overview Cards */}
       <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '16px', marginBottom: '24px' }}>
-        <div style={{ backgroundColor: '#f8f9fa', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #007bff' }}>
-          <span style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase' }}>My Total Contributions</span>
+        <div style={{ backgroundColor: '#f8f9fa', color: '#1e293b', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #007bff' }}>
+          <span style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase' }}>My Total Contributions</span>
           <h2 style={{ margin: '6px 0 0', color: '#007bff' }}>{totalUnitsDonated} Units</h2>
         </div>
-        <div style={{ backgroundColor: '#f8f9fa', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #8b5cf6' }}>
-          <span style={{ fontSize: '11px', color: '#666', textTransform: 'uppercase' }}>Active Hub Network</span>
+        <div style={{ backgroundColor: '#f8f9fa', color: '#1e293b', padding: '16px', borderRadius: '8px', borderLeft: '4px solid #8b5cf6' }}>
+          <span style={{ fontSize: '11px', color: '#64748b', textTransform: 'uppercase' }}>Active Hub Network</span>
           <h2 style={{ margin: '6px 0 0', color: '#8b5cf6' }}>3 Regional Centers (BLR, BOM, DEL)</h2>
         </div>
       </div>
 
       {/* Pledge Form */}
-      <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
-        <h3 style={{ marginTop: 0 }}>Pledge & Dispatch New Aid</h3>
+      <div style={{ backgroundColor: '#ffffff', color: '#1e293b', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
+        <h3 style={{ marginTop: 0, color: '#1e293b' }}>Pledge & Dispatch New Aid</h3>
         <form onSubmit={handlePledgeSubmit} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(180px, 1fr))', gap: '12px', alignItems: 'end' }}>
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>Aid Category</label>
-            <select value={type} onChange={(e) => setType(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', color: '#1e293b' }}>Aid Category</label>
+            <select value={type} onChange={(e) => setType(e.target.value)} style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: '#1e293b', backgroundColor: '#fff' }}>
               <option value="Medical Supplies">Medical Supplies</option>
               <option value="Food & Water">Food & Water</option>
               <option value="Shelter & Clothing">Shelter & Clothing</option>
@@ -350,17 +348,17 @@ export default function DonorDashboard() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>Item Description</label>
-            <input type="text" placeholder="e.g. Blankets" value={productName} onChange={(e) => setProductName(e.target.value)} required style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', color: '#1e293b' }}>Item Description</label>
+            <input type="text" placeholder="e.g. Blankets" value={productName} onChange={(e) => setProductName(e.target.value)} required style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: '#1e293b', backgroundColor: '#fff' }} />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>Quantity</label>
-            <input type="number" placeholder="e.g. 100" value={amount} onChange={(e) => setAmount(e.target.value)} required style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} />
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', color: '#1e293b' }}>Quantity</label>
+            <input type="number" placeholder="e.g. 100" value={amount} onChange={(e) => setAmount(e.target.value)} required style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: '#1e293b', backgroundColor: '#fff' }} />
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', color: '#1e293b' }}>
               Target Destination {geocoding && <span style={{ color: '#28a745' }}>(Locating...)</span>}
             </label>
             <div style={{ display: 'flex', gap: '4px' }}>
@@ -371,7 +369,7 @@ export default function DonorDashboard() {
                 onChange={(e) => setLocationName(e.target.value)} 
                 onBlur={() => geocodeLocation(locationName)} 
                 required 
-                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc' }} 
+                style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', color: '#1e293b', backgroundColor: '#fff' }} 
               />
               <button 
                 type="button" 
@@ -392,11 +390,11 @@ export default function DonorDashboard() {
           </div>
 
           <div>
-            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px' }}>Routing Distributing Hub</label>
+            <label style={{ display: 'block', fontSize: '12px', fontWeight: 'bold', marginBottom: '4px', color: '#1e293b' }}>Routing Distributing Hub</label>
             <select 
               value={selectedHub} 
               onChange={(e) => setSelectedHub(e.target.value)} 
-              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#f0fdf4' }}
+              style={{ width: '100%', padding: '8px', borderRadius: '4px', border: '1px solid #ccc', backgroundColor: '#f0fdf4', color: '#1e293b' }}
             >
               {Object.entries(DISTRIBUTING_HUBS).map(([key, hub]) => (
                 <option key={key} value={key}>{hub.name}</option>
@@ -411,11 +409,11 @@ export default function DonorDashboard() {
       </div>
 
       {/* Multi-Hub Map */}
-      <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
-        <h3 style={{ marginTop: 0 }}>📍 National Multi-Hub Delivery Routes</h3>
+      <div style={{ backgroundColor: '#ffffff', color: '#1e293b', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)', marginBottom: '24px' }}>
+        <h3 style={{ marginTop: 0, color: '#1e293b' }}>📍 National Multi-Hub Delivery Routes</h3>
         <p style={{ fontSize: '12px', color: '#64748b', marginTop: '-8px', marginBottom: '16px' }}>
-          <span style={{ color: '#8b5cf6', fontWeight: 'bold' }}>══ Purple Line:</span> Leg 1 (Donor Origin $\rightarrow$ Regional Hub) | 
-          <span style={{ color: '#2563eb', fontWeight: 'bold', marginLeft: '8px' }}>══ Colored Line:</span> Leg 2 (Regional Hub $\rightarrow$ Final Destination)
+          <span style={{ color: '#8b5cf6', fontWeight: 'bold' }}>══ Purple Line:</span> Leg 1 (Donor Origin → Regional Hub) | 
+          <span style={{ color: '#2563eb', fontWeight: 'bold', marginLeft: '8px' }}>══ Colored Line:</span> Leg 2 (Regional Hub → Final Destination)
         </p>
         <div style={{ height: '400px', width: '100%', borderRadius: '8px', overflow: 'hidden' }}>
           <MapContainer center={mapCenter} zoom={5} style={{ height: '100%', width: '100%' }}>
@@ -426,7 +424,7 @@ export default function DonorDashboard() {
             {/* Distributing Hub Markers */}
             {Object.values(DISTRIBUTING_HUBS).map((hub) => (
               <Marker key={hub.id} position={hub.coords}>
-                <Popup><strong>🏭 {hub.name}</strong></Popup>
+                <Popup><strong style={{ color: '#000' }}>🏭 {hub.name}</strong></Popup>
               </Marker>
             ))}
 
@@ -449,25 +447,22 @@ export default function DonorDashboard() {
 
               return (
                 <React.Fragment key={tx.id || idx}>
-                  {/* Leg 1: Inbound to Nearest Regional Hub */}
                   <Polyline 
                     positions={[donorCoords, hub.coords]} 
                     pathOptions={{ color: '#8b5cf6', weight: 2, dashArray: '4, 6' }} 
                   />
-
-                  {/* Leg 2: Outbound from Hub to Target Destination */}
                   <Polyline 
                     positions={[hub.coords, destCoords]} 
                     pathOptions={{ color: outboundColor, weight: 3, dashArray: '8, 8' }} 
                   />
-
-                  {/* Target Destination Marker */}
                   <Marker position={destCoords}>
                     <Popup>
-                      <strong>{tx.product_name || tx.aid_type}</strong><br />
-                      Destination: {parseLocation(tx)}<br />
-                      Routed via: <strong>{hub.name}</strong><br />
-                      Status: <strong>{(tx.status || 'pending').toUpperCase()}</strong>
+                      <div style={{ color: '#000' }}>
+                        <strong>{tx.product_name || tx.aid_type}</strong><br />
+                        Destination: {parseLocation(tx)}<br />
+                        Routed via: <strong>{hub.name}</strong><br />
+                        Status: <strong>{(tx.status || 'pending').toUpperCase()}</strong>
+                      </div>
                     </Popup>
                   </Marker>
                 </React.Fragment>
@@ -478,16 +473,16 @@ export default function DonorDashboard() {
       </div>
 
       {/* History Table */}
-      <div style={{ backgroundColor: '#fff', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
-        <h3 style={{ marginTop: 0 }}>Contribution History</h3>
+      <div style={{ backgroundColor: '#ffffff', color: '#1e293b', padding: '20px', borderRadius: '8px', boxShadow: '0 2px 8px rgba(0,0,0,0.1)' }}>
+        <h3 style={{ marginTop: 0, color: '#1e293b' }}>Contribution History</h3>
         {loading ? (
-          <p>Loading contributions...</p>
+          <p style={{ color: '#64748b' }}>Loading contributions...</p>
         ) : transactions.length === 0 ? (
-          <p style={{ color: '#666' }}>No contributions found yet. Submit a pledge above to start tracking!</p>
+          <p style={{ color: '#64748b' }}>No contributions found yet. Submit a pledge above to start tracking!</p>
         ) : (
-          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '12px' }}>
+          <table style={{ width: '100%', borderCollapse: 'collapse', marginTop: '12px', color: '#1e293b' }}>
             <thead>
-              <tr style={{ backgroundColor: '#f8f9fa', textAlign: 'left', borderBottom: '2px solid #dee2e6' }}>
+              <tr style={{ backgroundColor: '#f8f9fa', textAlign: 'left', borderBottom: '2px solid #dee2e6', color: '#1e293b' }}>
                 <th style={{ padding: '10px' }}>ID</th>
                 <th style={{ padding: '10px' }}>Category</th>
                 <th style={{ padding: '10px' }}>Item</th>
@@ -501,17 +496,17 @@ export default function DonorDashboard() {
               {transactions.map((tx) => {
                 const assignedHub = getNearestHub(tx.latitude, tx.longitude);
                 return (
-                  <tr key={tx.id} style={{ borderBottom: '1px solid #dee2e6' }}>
-                    <td style={{ padding: '10px' }}>#{tx.id}</td>
-                    <td style={{ padding: '10px' }}>{tx.aid_type || tx.type}</td>
-                    <td style={{ padding: '10px' }}>{tx.product_name || tx.description || 'N/A'}</td>
-                    <td style={{ padding: '10px' }}>{parseLocation(tx)}</td>
+                  <tr key={tx.id} style={{ borderBottom: '1px solid #dee2e6', color: '#1e293b' }}>
+                    <td style={{ padding: '10px', color: '#1e293b' }}>#{tx.id}</td>
+                    <td style={{ padding: '10px', color: '#1e293b' }}>{tx.aid_type || tx.type}</td>
+                    <td style={{ padding: '10px', color: '#1e293b' }}>{tx.product_name || tx.description || 'N/A'}</td>
+                    <td style={{ padding: '10px', color: '#1e293b' }}>{parseLocation(tx)}</td>
                     <td style={{ padding: '10px' }}>
                       <span style={{ fontSize: '12px', padding: '3px 8px', borderRadius: '4px', backgroundColor: '#ede9fe', color: '#6d28d9', fontWeight: 'bold' }}>
                         {assignedHub.name}
                       </span>
                     </td>
-                    <td style={{ padding: '10px' }}>{tx.amount}</td>
+                    <td style={{ padding: '10px', color: '#1e293b' }}>{tx.amount}</td>
                     <td style={{ padding: '10px' }}>{getStatusBadge(tx.status)}</td>
                   </tr>
                 );
