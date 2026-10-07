@@ -3,6 +3,7 @@ from database import engine
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
 from fastapi.middleware.cors import CORSMiddleware
 from fastapi.responses import JSONResponse
+from websocket_manager import manager as fleet_connection_manager
 
 # Import modular routers
 from routers.audit import router as audit_router
@@ -11,6 +12,7 @@ from routers.notifications import router as notifications_router
 from routers.recipients import router as recipients_router
 from routers.tracking import router as tracking_router
 from routers.transactions import router as transactions_router
+from routers.webhooks import router as webhooks_router
 
 # Auto-create missing database tables on backend startup
 models.Base.metadata.create_all(bind=engine)
@@ -62,6 +64,19 @@ async def shipment_websocket_endpoint(websocket: WebSocket):
         active_connections.remove(websocket)
 
 
+@app.websocket("/ws/fleet")
+async def fleet_websocket_endpoint(websocket: WebSocket):
+    await fleet_connection_manager.connect(websocket)
+    try:
+        # Keep the connection open; fleet updates are sent by transaction handlers.
+        while True:
+            await websocket.receive_text()
+    except WebSocketDisconnect:
+        pass
+    finally:
+        fleet_connection_manager.disconnect(websocket)
+
+
 # Mount feature-specific sub-routers into the main app
 app.include_router(auth_router)
 app.include_router(transactions_router)
@@ -69,6 +84,7 @@ app.include_router(recipients_router)
 app.include_router(tracking_router)
 app.include_router(audit_router)
 app.include_router(notifications_router)
+app.include_router(webhooks_router)
 
 
 # Root endpoint for basic health checks

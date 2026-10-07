@@ -1,5 +1,6 @@
 import os
 import random
+import logging
 import smtplib
 from email.mime.multipart import MIMEMultipart
 from email.mime.text import MIMEText
@@ -7,6 +8,58 @@ from twilio.rest import Client
 from dotenv import load_dotenv
 
 load_dotenv()
+
+logger = logging.getLogger(__name__)
+
+
+def send_sms(to_phone: str, message_body: str) -> bool:
+    """Send an SMS through Twilio; return whether dispatch succeeded."""
+    account_sid = os.getenv("TWILIO_ACCOUNT_SID")
+    auth_token = os.getenv("TWILIO_AUTH_TOKEN")
+    from_number = os.getenv("TWILIO_PHONE_NUMBER")
+
+    if not all((account_sid, auth_token, from_number, to_phone, message_body)):
+        logger.warning("SMS not sent: Twilio credentials or message details are missing.")
+        return False
+
+    try:
+        client = Client(account_sid, auth_token)
+        result = client.messages.create(body=message_body, from_=from_number, to=to_phone)
+        logger.info("SMS sent to %s (SID: %s)", to_phone, result.sid)
+        return True
+    except Exception:
+        logger.exception("Failed to send SMS to %s", to_phone)
+        return False
+
+
+def send_email(to_email: str, subject: str, body_html: str) -> bool:
+    """Send an HTML email through SMTP; return whether dispatch succeeded."""
+    smtp_host = os.getenv("MAIL_SERVER", "smtp.gmail.com")
+    smtp_port = os.getenv("MAIL_PORT", "587")
+    smtp_user = os.getenv("MAIL_USERNAME")
+    smtp_password = os.getenv("MAIL_PASSWORD")
+    from_email = os.getenv("MAIL_FROM") or smtp_user
+
+    if not all((to_email, subject, body_html, smtp_user, smtp_password, from_email)):
+        logger.warning("Email not sent: SMTP credentials or message details are missing.")
+        return False
+
+    message = MIMEMultipart("alternative")
+    message["Subject"] = subject
+    message["From"] = from_email
+    message["To"] = to_email
+    message.attach(MIMEText(body_html, "html", "utf-8"))
+
+    try:
+        with smtplib.SMTP(smtp_host, int(smtp_port)) as server:
+            server.starttls()
+            server.login(smtp_user, smtp_password)
+            server.sendmail(from_email, to_email, message.as_string())
+        logger.info("Email sent to %s", to_email)
+        return True
+    except Exception:
+        logger.exception("Failed to send email to %s", to_email)
+        return False
 
 # --- 1. OTP Generator ---
 def generate_otp() -> str:

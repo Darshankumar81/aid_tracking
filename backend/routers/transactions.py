@@ -10,7 +10,7 @@ import models
 import schemas
 from routers.auth import get_current_user
 from routers.notifications import notify_recipient_and_donor
-from routers.ws import manager
+from websocket_manager import manager
 
 router = APIRouter(prefix="/transactions", tags=["transactions"])
 

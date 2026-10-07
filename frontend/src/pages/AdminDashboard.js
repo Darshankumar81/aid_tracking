@@ -1,8 +1,9 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useCallback } from 'react';
 import { MapContainer, TileLayer, Marker, Popup, Polyline, useMap, useMapEvents } from 'react-leaflet';
 import L from 'leaflet';
 import { getTransactions, createTransaction } from '../api';
 import axios from 'axios';
+import { useWebSocket } from '../hooks/useWebSocket';
 
 // Fix default Leaflet marker icon asset paths for React bundle
 delete L.Icon.Default.prototype._getIconUrl;
@@ -142,6 +143,41 @@ export default function AdminDashboard() {
   const [mapCenter, setMapCenter] = useState([20.5937, 78.9629]);
   const [submitting, setSubmitting] = useState(false);
   const [geocoding, setGeocoding] = useState(false);
+
+  const handleWebSocketMessage = useCallback((message) => {
+    if (!message || !message.event_type) return;
+
+    if (message.event_type === 'SHIPMENT_CREATED') {
+      const payload = message.transaction || message.item || message.data || message;
+      const item = {
+        ...payload,
+        id: payload.id ?? message.id ?? message.transaction_id,
+        status: payload.status ?? payload.new_status ?? message.status ?? message.new_status,
+      };
+      if (item.id == null) return;
+
+      setTransactions((prev) => (
+        prev.some((transaction) => String(transaction.id) === String(item.id))
+          ? prev
+          : [...prev, item]
+      ));
+      return;
+    }
+
+    if (message.event_type === 'STATUS_UPDATED' || message.event_type === 'TELEMETRY_UPDATE') {
+      const transactionId = message.transaction_id ?? message.id;
+      const updates = message.transaction || message.item || message.data || message;
+      if (transactionId == null) return;
+
+      setTransactions((prev) => prev.map((transaction) => (
+        String(transaction.id) === String(transactionId)
+          ? { ...transaction, ...updates, status: updates.status ?? updates.new_status ?? transaction.status }
+          : transaction
+      )));
+    }
+  }, []);
+
+  useWebSocket('ws://127.0.0.1:8000/ws/fleet', handleWebSocketMessage);
 
   const fetchShipments = async () => {
     try {
