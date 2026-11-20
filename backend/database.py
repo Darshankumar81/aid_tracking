@@ -1,17 +1,26 @@
+import os
+from dotenv import load_dotenv
 from sqlalchemy import create_engine
 from sqlalchemy.orm import declarative_base, sessionmaker
 
-# Database connection URL
-SQLALCHEMY_DATABASE_URL = "postgresql+psycopg://postgres:your_password@localhost:5432/aid_tracking_db"
+# Load local .env only for variables not already set by Render
+load_dotenv(override=False)
 
-# Create engine and session factory
-engine = create_engine(SQLALCHEMY_DATABASE_URL)
+DATABASE_URL = os.getenv("DATABASE_URL", "sqlite:///./aidtracker.db")
+
+# Fix legacy postgres:// scheme if a cloud Postgres URL is ever used
+if DATABASE_URL.startswith("postgres://"):
+    DATABASE_URL = DATABASE_URL.replace("postgres://", "postgresql://", 1)
+
+# SQLite requires check_same_thread=False for FastAPI; Postgres does not
+connect_args = {"check_same_thread": False} if DATABASE_URL.startswith("sqlite") else {}
+
+engine = create_engine(DATABASE_URL, connect_args=connect_args)
 SessionLocal = sessionmaker(autocommit=False, autoflush=False, bind=engine)
 
-# Single Declarative Base instance used across all models
 Base = declarative_base()
 
-# Dependency to get DB session in FastAPI endpoints
+
 def get_db():
     db = SessionLocal()
     try:
