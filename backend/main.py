@@ -1,3 +1,4 @@
+import os
 import models
 from database import engine
 from fastapi import FastAPI, Request, WebSocket, WebSocketDisconnect
@@ -24,26 +25,39 @@ app = FastAPI(
     version="1.0.0",
 )
 
-# Setup CORS middleware for React frontend integration
+ALLOWED_ORIGINS = [
+    "http://localhost:3000",
+    "http://127.0.0.1:3000",
+    "https://aid-tracking-hoy5.vercel.app",
+]
+
+# Setup CORS middleware for local and Vercel React frontend integration
 app.add_middleware(
     CORSMiddleware,
-    allow_origins=[
-        "http://localhost:3000",
-        "http://127.0.0.1:3000",
-    ],
+    allow_origins=ALLOWED_ORIGINS,
+    allow_origin_regex=r"https://.*\.vercel\.app",
     allow_credentials=True,
     allow_methods=["*"],
     allow_headers=["*"],
 )
 
 
-# Global exception handler to guarantee CORS headers on internal 500 errors
+# Global exception handler to guarantee matching CORS headers on internal 500 errors
 @app.exception_handler(Exception)
 async def global_exception_handler(request: Request, exc: Exception):
+    origin = request.headers.get("origin", "")
+    cors_origin = (
+        origin
+        if origin in ALLOWED_ORIGINS or origin.endswith(".vercel.app")
+        else ALLOWED_ORIGINS[0]
+    )
     return JSONResponse(
         status_code=500,
         content={"detail": f"Internal Server Error: {str(exc)}"},
-        headers={"Access-Control-Allow-Origin": "http://localhost:3000"},
+        headers={
+            "Access-Control-Allow-Origin": cors_origin,
+            "Access-Control-Allow-Credentials": "true",
+        },
     )
 
 
@@ -61,7 +75,10 @@ async def shipment_websocket_endpoint(websocket: WebSocket):
             data = await websocket.receive_text()
             await websocket.send_text(f"Echo: {data}")
     except WebSocketDisconnect:
-        active_connections.remove(websocket)
+        pass
+    finally:
+        if websocket in active_connections:
+            active_connections.remove(websocket)
 
 
 @app.websocket("/ws/fleet")
@@ -96,4 +113,5 @@ def read_root():
 if __name__ == "__main__":
     import uvicorn
 
-    uvicorn.run("main:app", host="127.0.0.1", port=8000, reload=True)
+    port = int(os.getenv("PORT", 8000))
+    uvicorn.run("main:app", host="0.0.0.0", port=port, reload=True)
