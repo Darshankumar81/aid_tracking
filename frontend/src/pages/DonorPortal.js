@@ -6,7 +6,7 @@ export default function DonorPortal() {
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    fetch('http://127.0.0.1:8000/transactions/')
+    fetch('https://aid-tracking.onrender.com/transactions/')
       .then((res) => res.json())
       .then((data) => {
         setShipments(data);

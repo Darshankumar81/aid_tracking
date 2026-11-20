@@ -1,7 +1,7 @@
 import axios from 'axios';
 
 // Fallback to environment variables if present (Create React App format)
-const BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+const BASE_URL = process.env.REACT_APP_API_URL || 'https://aid-tracking.onrender.com';
 
 // 1. Centralized Axios instance
 const api = axios.create({

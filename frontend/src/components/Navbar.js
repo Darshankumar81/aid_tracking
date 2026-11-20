@@ -22,7 +22,7 @@ export default function Navbar() {
   const [showNotifs, setShowNotifs] = useState(false);
   const dropdownRef = useRef(null);
 
-  const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://localhost:8000';
+  const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://aid-tracking.onrender.com';
 
   // Fetch notifications if user is logged in
   useEffect(() => {

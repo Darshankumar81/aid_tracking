@@ -13,7 +13,7 @@ export default function RecipientDashboard() {
   const fetchIncomingShipments = async () => {
     try {
       const token = localStorage.getItem('token');
-      const res = await axios.get('http://127.0.0.1:8000/recipients/shipments', {
+      const res = await axios.get('https://aid-tracking.onrender.com/recipients/shipments', {
         headers: { Authorization: `Bearer ${token}` }
       });
       setShipments(res.data || []);
@@ -38,7 +38,7 @@ export default function RecipientDashboard() {
     try {
       const token = localStorage.getItem('token');
       const res = await axios.post(
-        'http://127.0.0.1:8000/recipients/generate-otp',
+        'https://aid-tracking.onrender.com/recipients/generate-otp',
         { transaction_id: tx.id },
         { headers: { Authorization: `Bearer ${token}` } }
       );
@@ -67,7 +67,7 @@ export default function RecipientDashboard() {
     try {
       const token = localStorage.getItem('token');
       await axios.post(
-        'http://127.0.0.1:8000/recipients/verify-delivery',
+        'https://aid-tracking.onrender.com/recipients/verify-delivery',
         {
           transaction_id: activeTx.id,
           otp_code: otpInput

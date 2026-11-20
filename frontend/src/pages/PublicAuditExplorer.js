@@ -12,7 +12,7 @@ export default function PublicAuditExplorer() {
     try {
       setLoading(true);
       setError('');
-      const res = await axios.get('http://127.0.0.1:8000/audit/ledger');
+      const res = await axios.get('https://aid-tracking.onrender.com/audit/ledger');
       setLedger(res.data || []);
     } catch (err) {
       setError('Unable to load public audit ledger.');

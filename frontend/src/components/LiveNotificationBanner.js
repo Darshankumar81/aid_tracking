@@ -14,7 +14,7 @@ export default function LiveNotificationBanner({ onUpdateReceived }) {
     let ws = null;
 
     const connect = () => {
-      ws = new WebSocket('ws://127.0.0.1:8000/ws/shipments');
+      ws = new WebSocket('wss://aid-tracking.onrender.com/ws/shipments');
 
       ws.onopen = () => {
         console.log('📡 WebSocket Connected: /ws/shipments');

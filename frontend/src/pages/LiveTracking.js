@@ -4,7 +4,7 @@ import L from 'leaflet';
 import axios from 'axios';
 import 'leaflet/dist/leaflet.css';
 
-const API_BASE_URL = process.env.REACT_APP_API_URL || 'http://127.0.0.1:8000';
+const API_BASE_URL = process.env.REACT_APP_API_URL || 'https://aid-tracking.onrender.com';
 
 // Custom Vehicle Truck Icon with Pulsing Effect
 const truckIcon = new L.DivIcon({

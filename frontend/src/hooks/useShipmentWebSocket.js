@@ -2,7 +2,7 @@ import { useEffect } from "react";
 
 export function useShipmentWebSocket(onEventReceived) {
   useEffect(() => {
-    const ws = new WebSocket("ws://127.0.0.1:8000/ws/shipments");
+    const ws = new WebSocket("wss://aid-tracking.onrender.com/ws/shipments");
 
     ws.onmessage = (event) => {
       try {

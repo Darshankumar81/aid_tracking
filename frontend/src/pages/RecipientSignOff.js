@@ -7,7 +7,7 @@ export default function RecipientSignOff() {
 
   const fetchIncoming = async () => {
     try {
-      const res = await fetch('http://127.0.0.1:8000/transactions/');
+      const res = await fetch('https://aid-tracking.onrender.com/transactions/');
       const data = await res.json();
       setIncoming(data);
     } catch (err) {
@@ -23,7 +23,7 @@ export default function RecipientSignOff() {
 
   const confirmReceipt = async (id) => {
     try {
-      const res = await fetch(`http://127.0.0.1:8000/transactions/${id}/status`, {
+      const res = await fetch(`https://aid-tracking.onrender.com/transactions/${id}/status`, {
         method: 'PATCH',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ status: 'Delivered' }),

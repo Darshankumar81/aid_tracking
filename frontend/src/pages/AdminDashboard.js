@@ -177,7 +177,7 @@ export default function AdminDashboard() {
     }
   }, []);
 
-  useWebSocket('ws://127.0.0.1:8000/ws/fleet', handleWebSocketMessage);
+  useWebSocket('wss://aid-tracking.onrender.com/ws/fleet', handleWebSocketMessage);
 
   const fetchShipments = async () => {
     try {
@@ -298,7 +298,7 @@ export default function AdminDashboard() {
       setError('');
       const token = localStorage.getItem('token');
       await axios.put(
-        `http://127.0.0.1:8000/transactions/${txId}/status`,
+        `https://aid-tracking.onrender.com/transactions/${txId}/status`,
         { status: newStatus },
         { headers: { Authorization: `Bearer ${token}` } }
       );
